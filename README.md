@@ -4,7 +4,7 @@ This repository is the revised version from the original Deep VGL benchmark [Pap
 We add some customer modules to meet the requirement of our own datasets. The details and full datasets will be provided if our paper is accepted. 
 
 ## quick start
-"""
+'''
 python eval.py
 --datasets_folder=YourDatasetDir
 --dataset_name=DatasetName
@@ -13,4 +13,4 @@ python eval.py
 --resume=./pretrained_models/msls_r101l3_gem_partial.pth
 --split_folder=SpiltFolderName
 --add_rerank=local_match
-"""
+'''
