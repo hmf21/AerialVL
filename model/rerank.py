@@ -180,4 +180,4 @@ def rerank(predictions, eval_ds, args):
     else:
         print("Rerank method error, please give the right methods")
 
-    return 12reranked_preds
+    return reranked_preds
