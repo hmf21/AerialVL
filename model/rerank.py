@@ -133,14 +133,14 @@ def PatchMatcher(predictions, eval_ds, args):
                 all_keypoints.append(keypoints)
                 all_indices.append(indices)
 
-            matcher = patch_matcher.compare_two_spatial(local_feats_one, local_feats_two, all_indices)
+            scores, inlier_keypoints_one, inlier_keypoints_two = patch_matcher.compare_two_spatial(local_feats_one, local_feats_two, all_indices)
 
-            scores, inlier_keypoints_one, inlier_keypoints_two = matcher.match(local_feats_one, local_feats_two)
+            # scores, inlier_keypoints_one, inlier_keypoints_two = matcher.match(local_feats_one, local_feats_two)
             score = patch_matcher.apply_patch_weights(scores, len(patch_sizes), patch_weights)
 
             torch.cuda.empty_cache()  # garbage clean GPU memory, a bug can occur when Pytorch doesn't automatically clear the
 
-            score_matcher_db[d_idx] = scores
+            score_matcher_db[d_idx] = score
 
             # rerank the prediction by their matched point pairs
             cand_sorted = np.argsort(score_matcher_db)[::-1]
