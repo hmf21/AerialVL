@@ -229,6 +229,38 @@ def DenseMatcher(predictions, eval_ds, args):
         reranked_preds.append(pred[cand_sorted])
     return np.array(reranked_preds)
 
+def CVNet_matcher(predictions, eval_ds, args):
+    database_paths = eval_ds.database_paths
+    queries_paths = eval_ds.queries_paths
+    reranked_preds = []
+    transform = transforms.ToTensor()
+    path = './model/cvnet/checkpoint/CVPR2022_CVNet_R50.pyth'
+    model = create_model(model_name='CVNet_R50', pretrained=True, checkpoint_path=path)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    for q_idx, pred in enumerate(tqdm(predictions, leave = False, desc = 'CVNet matcher comparing prediction: ')):
+        query_image_path = queries_paths[q_idx]
+        query_image = cv2.imread(query_image_path)
+        query_image = cv2.resize(query_image, (224, 224))
+        query_image_pil = Image.fromarray(cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB))
+        query_image_pil = transform(query_image_pil).to(device)
+        query_image_pil = query_image_pil.unsqueeze(0)
+
+        score_matcher_db = np.zeros((len(pred)))
+        for d_idx, candidate in enumerate(pred):
+            destine_image_path = database_paths[candidate]
+            destine_image = cv2.imread(destine_image_path)
+            destine_image = cv2.resize(destine_image, (224, 224))
+            destine_image_pil = Image.fromarray(cv2.cvtColor(destine_image, cv2.COLOR_BGR2RGB))
+            destine_image_pil = transform(destine_image_pil).to(device)
+            destine_image_pil = destine_image_pil.unsqueeze(0)
+
+            score = model(query_image_pil, destine_image_pil)
+            score_matcher_db[d_idx] = score
+
+        cand_sorted = np.argsort(score_matcher_db)[::-1]
+        reranked_preds.append(pred[cand_sorted])
+    return np.array(reranked_preds)
 
 def RandomSelect(predictions, eval_ds, args):
     reranked_preds = []
@@ -250,6 +282,8 @@ def rerank(predictions, eval_ds, args):
         reranked_preds = LocalMatcher(predictions, eval_ds, args)
     elif rerank_method == 'patch_match':
         reranked_preds = PatchMatcher(predictions, eval_ds, args)
+    elif rerank_method == "cvnet_match":
+        reranked_preds = CVNet_matcher(predictions, eval_ds, args)
     elif rerank_method == 'dense_match':
         reranked_preds = DenseMatcher(predictions, eval_ds, args)
     elif rerank_method == 'semantic_match':
@@ -258,6 +292,7 @@ def rerank(predictions, eval_ds, args):
         reranked_preds = CVNet_matcher(predictions, eval_ds, args)
     elif rerank_method == 'random':
         reranked_preds = RandomSelect(predictions, eval_ds, args)
+
     else:
         print("Rerank method error, please give the right methods")
     print((time.time() - t_ef_s) / 16)

@@ -93,7 +93,7 @@ def parse_arguments():
     parser.add_argument("--split_folder", type=str, default="eval", help="sub-path for images to evaluate")
     parser.add_argument("--save_retrieval_result", type=bool, default=False, help="Whether save the retrieval result")
     parser.add_argument("--add_rerank", type=str, default=None,
-                        choices=["local_match", 'patch_match', "dense_match", "semantic_match", "e2e", "random"],
+                        choices=["local_match", 'patch_match', 'cvnet_match',"dense_match", "semantic_match", "e2e", "random"],
                         help="To test the methods with two stages retrieval")
     args = parser.parse_args()
     
