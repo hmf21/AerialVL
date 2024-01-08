@@ -1,23 +1,3 @@
-
-"""
-With this script you can evaluate checkpoints or test models from two popular
-landmark retrieval github repos.
-The first is https://github.com/naver/deep-image-retrieval from Naver labs,
-provides ResNet-50 and ResNet-101 trained with AP on Google Landmarks 18 clean.
-$ python eval.py --off_the_shelf=naver --l2=none --backbone=resnet101conv5 --aggregation=gem --fc_output_dim=2048
-
-The second is https://github.com/filipradenovic/cnnimageretrieval-pytorch from
-Radenovic, provides ResNet-50 and ResNet-101 trained with a triplet loss
-on Google Landmarks 18 and sfm120k.
-$ python eval.py --off_the_shelf=radenovic_gldv1 --l2=after_pool --backbone=resnet101conv5 --aggregation=gem --fc_output_dim=2048
-$ python eval.py --off_the_shelf=radenovic_sfm --l2=after_pool --backbone=resnet101conv5 --aggregation=gem --fc_output_dim=2048
-
-Note that although the architectures are almost the same, Naver's
-implementation does not use a l2 normalization before/after the GeM aggregation,
-while Radenovic's uses it after (and we use it before, which shows better
-results in VG)
-"""
-
 import os
 import sys
 import torch
@@ -28,12 +8,17 @@ from os.path import join
 from datetime import datetime
 from torch.utils.model_zoo import load_url
 from google_drive_downloader import GoogleDriveDownloader as gdd
+import numpy as np
+from tqdm import tqdm
 
 import test
 import util
 import commons
 import datasets_ws
 from model import network
+
+from torch.utils.data import DataLoader
+from torch.utils.data.dataset import Subset
 
 OFF_THE_SHELF_RADENOVIC = {
     'resnet50conv5_sfm'    : 'http://cmp.felk.cvut.cz/cnnimageretrieval/data/networks/retrieval-SfM-120k/rSfM120k-tl-resnet50-gem-w-97bf910.pth',
@@ -57,7 +42,7 @@ if __name__ == '__main__':
     args.save_dir = join("test", args.save_dir, start_time.strftime('%Y-%m-%d_%H-%M-%S'))
     commons.setup_logging(args.save_dir)
     commons.make_deterministic(args.seed)
-    logging.info(f"Arguments: {args}")z
+    logging.info(f"Arguments: {args}")
     logging.info(f"The outputs are being saved in {args.save_dir}")
 
     # remove unwanted logging print
@@ -106,17 +91,21 @@ if __name__ == '__main__':
         pca = util.compute_pca(args, model, args.pca_dataset_folder, full_features_dim)
 
     ######################################### DATASETS #########################################
-    test_ds = datasets_ws.BaseDataset(args, args.datasets_folder, args.dataset_name, args.split_folder)
+    # use the subdir 'eval'
+    test_ds = datasets_ws.TestDataset(args, args.datasets_folder)
     logging.info(f"Test set: {test_ds}")
 
-    ######################################### TEST on TEST SET #########################################
-    if args.add_rerank is None:
-        recalls, recalls_str = test.test(args, test_ds, model, args.test_method, pca)
-        logging.info(f"Recalls on {test_ds}: {recalls_str}")
-    else:
-        recalls, recalls_str, rerank_recalls, rerank_recalls_str = test.test_two_stage(args, test_ds, model, args.test_method, pca)
-        logging.info(f"Recalls on {test_ds}: {recalls_str}")
-        logging.info(f"Recalls for rerank on {test_ds}: {rerank_recalls_str}")
+    database_subset_ds = Subset(test_ds, list(range(len(test_ds.dataset_paths))))
+    database_dataloader = DataLoader(dataset = test_ds, num_workers = args.num_workers,
+                                     batch_size = args.infer_batch_size, pin_memory = (args.device == "cuda"), shuffle=False)
 
+    all_features = np.empty((len(test_ds), args.features_dim), dtype = "float32")
 
-    logging.info(f"Finished in {str(datetime.now() - start_time)[:-7]}")
+    for inputs, indices in tqdm(database_dataloader, ncols = 100):
+        features = model(inputs.to(args.device))
+        features = features.cpu().detach().numpy()
+        if pca is not None:
+            features = pca.transform(features)
+        all_features[indices.numpy(), :] = features
+
+    np.save('./resource/global_feature_{}.npy'.format(args.dataset_name), all_features)
