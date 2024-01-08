@@ -106,7 +106,6 @@ if __name__ == '__main__':
         pca = util.compute_pca(args, model, args.pca_dataset_folder, full_features_dim)
 
     ######################################### DATASETS #########################################
-    # use the subdir 'eval'
     test_ds = datasets_ws.BaseDataset(args, args.datasets_folder, args.dataset_name, args.split_folder)
     logging.info(f"Test set: {test_ds}")
 

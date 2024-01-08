@@ -75,6 +75,22 @@ class SuperPointNet(torch.nn.Module):
         desc = desc.div(torch.unsqueeze(dn, 1))  # Divide by norm to normalize.
         return semi, desc
 
+    def extract_feature_map(self, x):
+        # Shared Encoder.
+        x = self.relu(self.conv1a(x))
+        x = self.relu(self.conv1b(x))
+        x = self.pool(x)
+        x = self.relu(self.conv2a(x))
+        x = self.relu(self.conv2b(x))
+        x = self.pool(x)
+        x = self.relu(self.conv3a(x))
+        x = self.relu(self.conv3b(x))
+        x = self.pool(x)
+        x = self.relu(self.conv4a(x))
+        x = self.relu(self.conv4b(x))
+        # Extracted Feature Map
+        return x
+
 
 class SuperPointFrontend(object):
     """ Wrapper around pytorch net to help with pre and post image processing. """
@@ -235,3 +251,26 @@ class SuperPointFrontend(object):
             desc = desc.data.cpu().numpy().reshape(D, -1)
             desc /= np.linalg.norm(desc, axis=0)[np.newaxis, :]
         return pts, desc, heatmap
+
+    def extract_feature_map(self, img):
+        """ Process a numpy image to extract points and descriptors.
+        Input
+          img - HxW numpy float32 input image in range [0,1].
+        Output
+          corners - 3xN numpy array with corners [x_i, y_i, confidence_i]^T.
+          desc - 256xN numpy array of corresponding unit normalized descriptors.
+          heatmap - HxW numpy heatmap in range [0,1] of point confidences.
+          """
+        assert img.ndim == 2, 'Image must be grayscale.'
+        assert img.dtype == np.float32, 'Image must be float32.'
+        H, W = img.shape[0], img.shape[1]
+        inp = img.copy()
+        inp = (inp.reshape(1, H, W))
+        inp = torch.from_numpy(inp)
+        inp = torch.autograd.Variable(inp).view(1, 1, H, W)
+        if self.cuda:
+            inp = inp.cuda()
+        # Forward pass of network.
+        out = self.net.extract_feature_map(inp)
+
+        return out

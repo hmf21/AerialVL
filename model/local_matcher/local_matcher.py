@@ -31,7 +31,7 @@ def des_spp_compute(query_image):
     # q_image = np.clip(np.rot90(q_image, -1), 0, 255).astype(np.uint8)
 
     # resize the image  if necessary
-    # q_image = cv2.resize(q_image, (640, 480), interpolation=interp)
+    q_image = cv2.resize(q_image, (500, 500), interpolation=interp)
     # q_image_color = cv2.resize(q_image_color, (640, 480), interpolation=interp)
     q_image = (q_image.astype('float32') / 255.)
     q_pts, q_des, _ = fe.run(q_image)

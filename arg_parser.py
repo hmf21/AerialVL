@@ -1,6 +1,7 @@
 
 import os
 import torch
+import numpy as np
 import argparse
 
 
@@ -10,7 +11,7 @@ def parse_arguments():
     # Training parameters
     parser.add_argument("--train_batch_size", type=int, default=4,
                         help="Number of triplets (query, pos, negs) in a batch. Each triplet consists of 12 images")
-    parser.add_argument("--infer_batch_size", type=int, default=16,
+    parser.add_argument("--infer_batch_size", type=int, default=1,
                         help="Batch size for inference (caching and testing)")
     parser.add_argument("--criterion", type=str, default='triplet', help='loss to be used',
                         choices=["triplet", "sare_ind", "sare_joint"])
@@ -67,8 +68,10 @@ def parse_arguments():
     parser.add_argument("--efficient_ram_testing", action='store_true', help="_")
     parser.add_argument("--val_positive_dist_threshold", type=float, default=0.001, help="Present about 50 meters")
     parser.add_argument("--train_positives_dist_threshold", type=float, default=0.0005, help="Present about 50 meters")
-    parser.add_argument('--recall_values', type=int, default=[1, 5, 10, 20], nargs="+",
+    parser.add_argument('--recall_values', type=int, default=[1, 5, 10], nargs="+",
                         help="Recalls to be computed, such as R@5.")
+    # parser.add_argument('--recall_values', type=int, default=list(np.linspace(1, 20, num=20).astype(np.int32)), nargs="+",
+    #                     help="Recalls to be computed, such as R@5.")
     # Data augmentation parameters
     parser.add_argument("--brightness", type=float, default=0, help="_")
     parser.add_argument("--contrast", type=float, default=0, help="_")
@@ -79,7 +82,8 @@ def parse_arguments():
     parser.add_argument("--random_resized_crop", type=float, default=0, help="_")
     parser.add_argument("--random_rotation", type=float, default=0, help="_")
     # Paths parameters
-    parser.add_argument("--datasets_folder", type=str, default=None, help="Path with all datasets")
+    parser.add_argument("--datasets_folder", type=str, default=None, help="Path with all database")
+    parser.add_argument("--querys_folder", type=str, default=None, help="Path with all the query")
     parser.add_argument("--dataset_name", type=str, default="pitts30k", help="Relative path of the dataset")
     parser.add_argument("--pca_dataset_folder", type=str, default=None,
                         help="Path with images to be used to compute PCA (ie: pitts30k/images/train")

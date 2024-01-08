@@ -95,7 +95,7 @@ def apply_patch_weights(input_scores, num_patches, patch_weights):
     return output_score
 
 
-def compare_two_spatial(all_indices, qfeats, dbfeats):
+def compare_two_spatial(qfeats, dbfeats, all_indices):
     scores = []
     for qfeat, dbfeat, indices in zip(qfeats, dbfeats, all_indices):
         fw_inds, bw_inds = torch_nn(qfeat, dbfeat)

@@ -72,7 +72,7 @@ def get_model(encoder, encoder_dim, num_clusters, patch_sizes, strides, append_p
     nn_model.add_module('pool', net_vlad)
 
     if append_pca_layer:
-        num_pcs = int(4096)
+        num_pcs = int(128)
         netvlad_output_dim = int(encoder_dim)
         netvlad_output_dim *= int(num_clusters)
 

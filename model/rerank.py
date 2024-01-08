@@ -10,7 +10,10 @@ from PIL import Image
 import model.resizeimage as resizeimage
 from model.local_matcher import local_matcher
 from model.patch_matcher import patch_matcher
+from model.dense_matcher import dense_matcher
 from model.patch_matcher.patchnetvlad.models import models_generic
+from model.cvnet.cvnet import create_model
+import torchvision.transforms as transforms
 
 
 def LocalMatcher(predictions, eval_ds, args):
@@ -38,7 +41,7 @@ def LocalMatcher(predictions, eval_ds, args):
                 matches = flann.knnMatch(q_des, d_des, k=2)
                 good = []
                 for m, n in matches:
-                    if m.distance < 0.95 * n.distance:
+                    if m.distance < 0.75 * n.distance:
                         good.append(m)
 
                 # use mask in findHomography to get the correct matched point
@@ -64,11 +67,11 @@ def PatchMatcher(predictions, eval_ds, args):
     database_paths = eval_ds.database_paths
     queries_paths = eval_ds.queries_paths
     reranked_preds = []
-    it = resizeimage.input_transform((480, 640))
+    it = resizeimage.input_transform((500, 500))
     args_strides = '1,1,1'
     args_patch_sizes = '2, 5, 8'
     args_patchweights2use = '0.45, 0.15, 0.4'
-    args_pool_size = 4096
+    args_pool_size = 128
 
     for q_idx, pred in enumerate(tqdm(predictions, leave = False, desc = 'Patch matcher comparing prediction: ')):
         query_image_path = queries_paths[q_idx]
@@ -89,7 +92,7 @@ def PatchMatcher(predictions, eval_ds, args):
             encoder_dim, encoder = models_generic.get_backend()
 
             # must resume to do extraction
-            resume_ckpt = './model/patch_matcher/patchnetvlad/pretrained_models/mapillary_WPCA4096.pth.tar'
+            resume_ckpt = './model/patch_matcher/patchnetvlad/pretrained_models/mapillary_WPCA128.pth.tar'
 
             if os.path.isfile(resume_ckpt):
                 checkpoint = torch.load(resume_ckpt, map_location = lambda storage, loc: storage)
@@ -142,11 +145,89 @@ def PatchMatcher(predictions, eval_ds, args):
 
             score_matcher_db[d_idx] = score
 
-            # rerank the prediction by their matched point pairs
-            cand_sorted = np.argsort(score_matcher_db)[::-1]
-            reranked_preds.append(pred[cand_sorted])
+        # rerank the prediction by their matched point pairs
+        cand_sorted = np.argsort(score_matcher_db)
+        reranked_preds.append(pred[cand_sorted])
 
-        return np.array(reranked_preds)
+    return np.array(reranked_preds)
+
+
+def CVNet_matcher(predictions, eval_ds, args):
+    database_paths = eval_ds.database_paths
+    queries_paths = eval_ds.queries_paths
+    reranked_preds = []
+    transform = transforms.ToTensor()
+    path = './model/cvnet/checkpoint/CVPR2022_CVNet_R50.pyth'
+    model = create_model(model_name='CVNet_R50', pretrained=True, checkpoint_path=path)
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+    for q_idx, pred in enumerate(tqdm(predictions, leave = False, desc = 'CVNet matcher comparing prediction: ')):
+        query_image_path = queries_paths[q_idx]
+        query_image = cv2.imread(query_image_path)
+        query_image = cv2.resize(query_image, (500, 500))
+        query_image_pil = Image.fromarray(cv2.cvtColor(query_image, cv2.COLOR_BGR2RGB))
+        query_image_pil = transform(query_image_pil).to(device)
+        query_image_pil = query_image_pil.unsqueeze(0)
+
+        score_matcher_db = np.zeros((len(pred)))
+        for d_idx, candidate in enumerate(pred):
+            destine_image_path = database_paths[candidate]
+            destine_image = cv2.imread(destine_image_path)
+            destine_image = cv2.resize(destine_image, (500, 500))
+            destine_image_pil = Image.fromarray(cv2.cvtColor(destine_image, cv2.COLOR_BGR2RGB))
+            destine_image_pil = transform(destine_image_pil).to(device)
+            destine_image_pil = destine_image_pil.unsqueeze(0)
+
+            score = model(query_image_pil, destine_image_pil)
+            score_matcher_db[d_idx] = score
+
+        cand_sorted = np.argsort(score_matcher_db)[::-1]
+        reranked_preds.append(pred[cand_sorted])
+    return np.array(reranked_preds)
+
+
+def DenseMatcher(predictions, eval_ds, args):
+    database_paths = eval_ds.database_paths
+    queries_paths = eval_ds.queries_paths
+    reranked_preds = []
+
+    for q_idx, pred in enumerate(tqdm(predictions, leave = False, desc = 'Local matcher comparing prediction: ')):
+        query_image = queries_paths[q_idx]
+        q_kpts, q_des = local_matcher.detectAndcompute(image = query_image, matcher_method = 'superpoint')
+
+        # dual circulation
+        score_matcher_db = np.zeros((len(pred)))
+        for d_idx, candidate in enumerate(pred):
+            destine_image = database_paths[candidate]
+            d_kpts, d_des = local_matcher.detectAndcompute(image = destine_image, matcher_method = 'superpoint')
+
+            correct_matched_kp = ''
+
+            if (len(q_kpts) >= 10) and (len(d_kpts) >= 10):
+                FLANN_INDEX_KDTREE = 1
+                index_params = dict(algorithm = FLANN_INDEX_KDTREE, trees = 5)
+                search_params = dict(checks = 50)
+                flann = cv2.FlannBasedMatcher(index_params, search_params)
+                matches = flann.knnMatch(q_des, d_des, k = 2)
+                good = []
+                for m, n in matches:
+                    if m.distance < 0.75 * n.distance:
+                        good.append(m)
+
+                # use mask in findHomography to get the correct matched point
+                if len(good) > 10:
+                    src_pts = np.float32([q_kpts[m.queryIdx].pt for m in good]).reshape(-1, 1, 2)
+                    dst_pts = np.float32([d_kpts[m.trainIdx].pt for m in good]).reshape(-1, 1, 2)
+                    H_found, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 4.0)
+
+            warp_destine_image = cv2.warpPerspective(cv2.imread(destine_image), H_found, (500, 500))
+            score = dense_matcher.dense_feature_PV(warp_destine_image, query_image)
+
+            score_matcher_db[d_idx] = score
+
+        cand_sorted = np.argsort(score_matcher_db)
+        reranked_preds.append(pred[cand_sorted])
+    return np.array(reranked_preds)
 
 
 def RandomSelect(predictions, eval_ds, args):
@@ -164,20 +245,20 @@ def rerank(predictions, eval_ds, args):
     # eval_ds contains database and the
 
     rerank_method = args.add_rerank
-
+    t_ef_s = time.time()
     if rerank_method == 'local_match':
         reranked_preds = LocalMatcher(predictions, eval_ds, args)
     elif rerank_method == 'patch_match':
         reranked_preds = PatchMatcher(predictions, eval_ds, args)
     elif rerank_method == 'dense_match':
-        pass
+        reranked_preds = DenseMatcher(predictions, eval_ds, args)
     elif rerank_method == 'semantic_match':
         pass
     elif rerank_method == 'e2e':
-        pass
+        reranked_preds = CVNet_matcher(predictions, eval_ds, args)
     elif rerank_method == 'random':
         reranked_preds = RandomSelect(predictions, eval_ds, args)
     else:
         print("Rerank method error, please give the right methods")
-
+    print((time.time() - t_ef_s) / 16)
     return reranked_preds

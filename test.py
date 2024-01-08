@@ -1,4 +1,5 @@
 import os
+import time
 
 import faiss
 import torch
@@ -157,10 +158,13 @@ def test(args, eval_ds, model, test_method="hard_resize", pca=None):
         queries_subset_ds = Subset(eval_ds, list(range(eval_ds.database_num, eval_ds.database_num+eval_ds.queries_num)))
         queries_dataloader = DataLoader(dataset=queries_subset_ds, num_workers=args.num_workers,
                                         batch_size=queries_infer_batch_size, pin_memory=(args.device == "cuda"))
+        t_ef_list = []
         for inputs, indices in tqdm(queries_dataloader, ncols=100):
             if test_method == "five_crops" or test_method == "nearest_crop" or test_method == 'maj_voting':
                 inputs = torch.cat(tuple(inputs))  # shape = 5*bs x 3 x 480 x 480
+            t_ef_s = time.time()
             features = model(inputs.to(args.device))
+            t_ef_list.append(time.time() - t_ef_s)
             if test_method == "five_crops":  # Compute mean along the 5 crops
                 features = torch.stack(torch.split(features, 5)).mean(1)
             features = features.cpu().numpy()
@@ -174,16 +178,18 @@ def test(args, eval_ds, model, test_method="hard_resize", pca=None):
                 all_features[indices, :] = features
             else:
                 all_features[indices.numpy(), :] = features
+        t_ef_avg = np.mean(np.array(t_ef_list)) / queries_infer_batch_size
+        logging.debug(f"Average Extaction Time: {t_ef_avg} s")
     
     queries_features = all_features[eval_ds.database_num:]
     database_features = all_features[:eval_ds.database_num]
     
     faiss_index = faiss.IndexFlatL2(args.features_dim)
     faiss_index.add(database_features)
-    del database_features, all_features
+    del database_features
     
     logging.debug("Calculating recalls")
-    distances, predictions = faiss_index.search(queries_features, max(args.recall_values))
+    distances, predictions = faiss_index.search(queries_features, int(max(args.recall_values)))
     
     if test_method == 'nearest_crop':
         distances = np.reshape(distances, (eval_ds.queries_num, 20 * 5))
@@ -305,10 +311,13 @@ def test_two_stage(args, eval_ds, model, test_method="hard_resize", pca=None):
                                    list(range(eval_ds.database_num, eval_ds.database_num + eval_ds.queries_num)))
         queries_dataloader = DataLoader(dataset=queries_subset_ds, num_workers=args.num_workers,
                                         batch_size=queries_infer_batch_size, pin_memory=(args.device == "cuda"))
+        t_ef_list = []
         for inputs, indices in tqdm(queries_dataloader, ncols=100):
             if test_method == "five_crops" or test_method == "nearest_crop" or test_method == 'maj_voting':
                 inputs = torch.cat(tuple(inputs))  # shape = 5*bs x 3 x 480 x 480
+            t_ef_s = time.time()
             features = model(inputs.to(args.device))
+            t_ef_list.append(time.time()-t_ef_s)
             if test_method == "five_crops":  # Compute mean along the 5 crops
                 features = torch.stack(torch.split(features, 5)).mean(1)
             features = features.cpu().numpy()
@@ -322,6 +331,8 @@ def test_two_stage(args, eval_ds, model, test_method="hard_resize", pca=None):
                 all_features[indices, :] = features
             else:
                 all_features[indices.numpy(), :] = features
+        t_ef_avg = np.mean(np.array(t_ef_list))
+        logging.debug(f"Average Extaction Time: {t_ef_avg} s")
 
     queries_features = all_features[eval_ds.database_num:]
     database_features = all_features[:eval_ds.database_num]
@@ -331,7 +342,7 @@ def test_two_stage(args, eval_ds, model, test_method="hard_resize", pca=None):
     del database_features, all_features
 
     logging.debug("Calculating recalls")
-    distances, predictions = faiss_index.search(queries_features, max(args.recall_values))
+    distances, predictions = faiss_index.search(queries_features, int(max(args.recall_values)))
 
     if test_method == 'nearest_crop':
         distances = np.reshape(distances, (eval_ds.queries_num, 20 * 5))

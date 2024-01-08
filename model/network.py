@@ -5,10 +5,10 @@ import logging
 import torchvision
 from torch import nn
 from os.path import join
-from transformers import ViTModel
+# from transformers import ViTModel
 from google_drive_downloader import GoogleDriveDownloader as gdd
 
-from model.cct import cct_14_7x2_384
+# from model.cct import cct_14_7x2_384
 from model.aggregation import Flatten
 from model.normalization import L2Norm
 import model.aggregation as aggregation
