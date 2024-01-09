@@ -92,10 +92,10 @@ if __name__ == '__main__':
 
     ######################################### DATASETS #########################################
     # use the subdir 'eval'
-    test_ds = datasets_ws.TestDataset(args, args.datasets_folder)
+    test_ds = datasets_ws.TestDataset(args, None, args.datasets_folder)
     logging.info(f"Test set: {test_ds}")
 
-    database_subset_ds = Subset(test_ds, list(range(len(test_ds.dataset_paths))))
+    database_subset_ds = Subset(test_ds, list(range(len(test_ds.database_paths))))
     database_dataloader = DataLoader(dataset = test_ds, num_workers = args.num_workers,
                                      batch_size = args.infer_batch_size, pin_memory = (args.device == "cuda"), shuffle=False)
 
