@@ -134,6 +134,16 @@ if __name__ == '__main__':
     for q_index, predictions in enumerate(predictions_):
         for i, n in enumerate(args.recall_values):
             if np.any(np.in1d(predictions[:n], positives_per_query[q_index])):
+                recalls[i] += 1
+    recalls = recalls / test_ds.queries_num * 100
+    recalls_str = ", ".join([f"R@{val}: {rec:.1f}" for val, rec in zip(args.recall_values, recalls)])
+
+    print("Recalls: ", recalls_str)
+
+    recalls = np.zeros(len(args.recall_values))
+    for q_index, predictions in enumerate(predictions_):
+        for i, n in enumerate(args.recall_values):
+            if np.any(np.in1d(predictions[:n], positives_per_query[q_index])):
                 recalls[i:] += 1
 
         # save the viz result
@@ -175,8 +185,3 @@ if __name__ == '__main__':
 
         # for pred_idx, prediction in enumerate(predictions[:5]):
         #     shutil.copyfile(dataset_images_index[prediction], sub_dir_save_viz_result+'\\'+str(pred_idx).zfill(2)+'.png')
-
-    recalls = recalls / test_ds.queries_num * 100
-    recalls_str = ", ".join([f"R@{val}: {rec:.1f}" for val, rec in zip(args.recall_values, recalls)])
-
-    print("Recalls: ", recalls_str)

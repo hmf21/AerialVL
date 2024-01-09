@@ -108,4 +108,6 @@ if __name__ == '__main__':
             features = pca.transform(features)
         all_features[indices.numpy(), :] = features
 
+    if not os.path.exists('./resource'):
+        os.mkdir('./resource')
     np.save('./resource/global_feature_{}.npy'.format(args.dataset_name), all_features)

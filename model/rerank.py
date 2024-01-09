@@ -41,7 +41,7 @@ def LocalMatcher(predictions, eval_ds, args):
                 matches = flann.knnMatch(q_des, d_des, k=2)
                 good = []
                 for m, n in matches:
-                    if m.distance < 0.75 * n.distance:
+                    if m.distance < 0.95 * n.distance:
                         good.append(m)
 
                 # use mask in findHomography to get the correct matched point
@@ -292,7 +292,6 @@ def rerank(predictions, eval_ds, args):
         reranked_preds = CVNet_matcher(predictions, eval_ds, args)
     elif rerank_method == 'random':
         reranked_preds = RandomSelect(predictions, eval_ds, args)
-
     else:
         print("Rerank method error, please give the right methods")
     print((time.time() - t_ef_s) / 16)
