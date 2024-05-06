@@ -180,7 +180,8 @@ class TestDataset(data.Dataset):
             if not os.path.exists(self.queries_folder):
                 raise FileNotFoundError(f"Folder {self.queries_folder} does not exist")
 
-            self.queries_paths = glob(join(self.queries_folder, "**", args.img_ext), recursive = True)
+            # self.queries_paths = glob(join(self.queries_folder, "**", args.img_ext), recursive = True)
+            self.queries_paths = glob(join(self.queries_folder, "**", "*.JPG"), recursive = True)
             self.database_paths = glob(join(self.database_folder, "**", args.img_ext), recursive = True)
             self.queries_num = len(self.queries_paths)
             self.database_num = len(self.database_paths)

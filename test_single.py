@@ -15,6 +15,7 @@ import faiss
 import util
 import commons
 import datasets_ws
+import warnings
 from model import network
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
@@ -41,6 +42,7 @@ if __name__ == '__main__':
     # source code path in remote computer is '/home/cloudam/Sourcecode/deep-visual-geo-localization-benchmark'
 
     ######################################### SETUP #########################################
+    warnings.filterwarnings("ignore")
     args = arg_parser.parse_arguments()
     start_time = datetime.now()
     args.save_dir = join("test", args.save_dir, start_time.strftime('%Y-%m-%d_%H-%M-%S'))
@@ -119,7 +121,7 @@ if __name__ == '__main__':
 
     database_features = np.load('./resource/global_feature_{}.npy'.format(args.dataset_name))
     dataset_images_index = glob(join(args.datasets_folder, "**", args.img_ext), recursive = True)
-    query_images_index = glob(join(args.querys_folder, "**", args.img_ext), recursive = True)
+    query_images_index = glob(join(args.querys_folder, "**", "*.JPG"), recursive = True)
 
     faiss_index = faiss.IndexFlatL2(features_dim)
     faiss_index.add(database_features)
@@ -140,48 +142,51 @@ if __name__ == '__main__':
 
     print("Recalls: ", recalls_str)
 
-    recalls = np.zeros(len(args.recall_values))
-    for q_index, predictions in enumerate(predictions_):
-        for i, n in enumerate(args.recall_values):
-            if np.any(np.in1d(predictions[:n], positives_per_query[q_index])):
-                recalls[i:] += 1
+    save_fig = True
+    if save_fig:
+        recalls = np.zeros(len(args.recall_values))
+        for q_index, predictions in enumerate(predictions_):
+            for i, n in enumerate(args.recall_values):
+                if np.any(np.in1d(predictions[:n], positives_per_query[q_index])):
+                    recalls[i:] += 1
 
-        # save the viz result
-        retrieved_tile_name_0 = dataset_images_index[predictions[0]]
-        retrieved_tile_name_1 = dataset_images_index[predictions[1]]
-        retrieved_tile_name_2 = dataset_images_index[predictions[2]]
-        retrieved_tile_name_3 = dataset_images_index[predictions[3]]
-        retrieved_tile_name_4 = dataset_images_index[predictions[4]]
-        query_image_name = query_images_index[q_index]
-        retrieved_tile_0 = mpimg.imread(retrieved_tile_name_0)
-        retrieved_tile_1 = mpimg.imread(retrieved_tile_name_1)
-        retrieved_tile_2 = mpimg.imread(retrieved_tile_name_2)
-        retrieved_tile_3 = mpimg.imread(retrieved_tile_name_3)
-        retrieved_tile_4 = mpimg.imread(retrieved_tile_name_4)
-        query_image = mpimg.imread(query_image_name)
-        plt.subplot(2, 3, 1)
-        plt.axis('off')
-        plt.imshow(query_image)
-        plt.subplot(2, 3, 2)
-        plt.axis('off')
-        plt.imshow(retrieved_tile_0)
-        plt.subplot(2, 3, 3)
-        plt.axis('off')
-        plt.imshow(retrieved_tile_1)
-        plt.subplot(2, 3, 4)
-        plt.axis('off')
-        plt.imshow(retrieved_tile_2)
-        plt.subplot(2, 3, 5)
-        plt.axis('off')
-        plt.imshow(retrieved_tile_3)
-        plt.subplot(2, 3, 6)
-        plt.axis('off')
-        plt.imshow(retrieved_tile_4)
-        sub_dir_save_viz_result = './result/{}/{}'.format(args.dataset_name, str(q_index).zfill(5))
-        if not os.path.exists(sub_dir_save_viz_result):
-            os.mkdir(sub_dir_save_viz_result)
-        plt.savefig('./result/{}/{}/query_{}.png'.format(args.dataset_name, str(q_index).zfill(5), str(q_index).zfill(5)))
-        # plt.show()
-
-        # for pred_idx, prediction in enumerate(predictions[:5]):
-        #     shutil.copyfile(dataset_images_index[prediction], sub_dir_save_viz_result+'\\'+str(pred_idx).zfill(2)+'.png')
+            # save the viz result
+            retrieved_tile_name_0 = dataset_images_index[predictions[0]]
+            retrieved_tile_name_1 = dataset_images_index[predictions[1]]
+            retrieved_tile_name_2 = dataset_images_index[predictions[2]]
+            retrieved_tile_name_3 = dataset_images_index[predictions[3]]
+            retrieved_tile_name_4 = dataset_images_index[predictions[4]]
+            query_image_name = query_images_index[q_index]
+            retrieved_tile_0 = mpimg.imread(retrieved_tile_name_0)
+            retrieved_tile_1 = mpimg.imread(retrieved_tile_name_1)
+            retrieved_tile_2 = mpimg.imread(retrieved_tile_name_2)
+            retrieved_tile_3 = mpimg.imread(retrieved_tile_name_3)
+            retrieved_tile_4 = mpimg.imread(retrieved_tile_name_4)
+            query_image = mpimg.imread(query_image_name)
+            plt.subplot(2, 3, 1)
+            plt.axis('off')
+            plt.imshow(query_image)
+            plt.subplot(2, 3, 2)
+            plt.axis('off')
+            plt.imshow(retrieved_tile_0)
+            plt.subplot(2, 3, 3)
+            plt.axis('off')
+            plt.imshow(retrieved_tile_1)
+            plt.subplot(2, 3, 4)
+            plt.axis('off')
+            plt.imshow(retrieved_tile_2)
+            plt.subplot(2, 3, 5)
+            plt.axis('off')
+            plt.imshow(retrieved_tile_3)
+            plt.subplot(2, 3, 6)
+            plt.axis('off')
+            plt.imshow(retrieved_tile_4)
+            sub_dir_save_viz_result = './result/{}/{}'.format(args.dataset_name, str(q_index).zfill(5))
+            if not os.path.exists(sub_dir_save_viz_result):
+                os.mkdir(sub_dir_save_viz_result)
+            plt.savefig('./result/{}/{}/query_{}.png'.format(args.dataset_name, str(q_index).zfill(5), str(q_index).zfill(5)))
+            # plt.show()
+            print("finish")
+            for pred_idx, prediction in enumerate(predictions[:5]):
+                shutil.copyfile(query_image_name, sub_dir_save_viz_result+'/'+str(pred_idx).zfill(4)+'_qr.png')
+                shutil.copyfile(dataset_images_index[prediction], sub_dir_save_viz_result+'/'+str(pred_idx).zfill(4)+'_db.png')

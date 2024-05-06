@@ -58,7 +58,7 @@ def parse_arguments():
                         help="Path to load checkpoint from, for resuming training or testing.")
     # Other parameters
     parser.add_argument("--device", type=str, default="cuda", choices=["cuda", "cpu"])
-    parser.add_argument("--num_workers", type=int, default=8, help="num_workers for all dataloaders")
+    parser.add_argument("--num_workers", type=int, default=4, help="num_workers for all dataloaders")
     parser.add_argument('--resize', type=int, default=[500, 500], nargs=2, help="Resizing shape for images (HxW).")
     parser.add_argument('--test_method', type=str, default="hard_resize",
                         choices=["hard_resize", "single_query", "central_crop", "five_crops", "nearest_crop", "maj_voting"],
@@ -66,7 +66,7 @@ def parse_arguments():
     parser.add_argument("--majority_weight", type=float, default=0.01,
                         help="only for majority voting, scale factor, the higher it is the more importance is given to agreement")
     parser.add_argument("--efficient_ram_testing", action='store_true', help="_")
-    parser.add_argument("--val_positive_dist_threshold", type=float, default=0.001, help="Present about 50 meters")
+    parser.add_argument("--val_positive_dist_threshold", type=float, default=0.0005, help="Present about 50 meters")
     parser.add_argument("--train_positives_dist_threshold", type=float, default=0.0005, help="Present about 50 meters")
     parser.add_argument('--recall_values', type=int, default=[1, 5, 10], nargs="+",
                         help="Recalls to be computed, such as R@5.")

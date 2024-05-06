@@ -294,5 +294,6 @@ def rerank(predictions, eval_ds, args):
         reranked_preds = RandomSelect(predictions, eval_ds, args)
     else:
         print("Rerank method error, please give the right methods")
+        reranked_preds = predictions
     print((time.time() - t_ef_s) / 16)
     return reranked_preds
