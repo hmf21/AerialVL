@@ -20,8 +20,11 @@
 ## Dataset
 
 ### Description
+<p align="center">
+  <video src='asset/RA-L-24-0975-AerialVL.mp4' width=400/>
+</p>
 
-
+  
 - About 70km flight data with various terrian, multi-height and illumination changes.
 - 11 flight sequences with different routes ranging from the shortest one of 3.7km to the longest up to 11km.
 - 18361 separate aerial-based images with 14096 cropped corresponding map patches.
@@ -34,7 +37,7 @@
 </p>
 
 <p align="center">
-  <img width="600" src="asset/collect_pltfm_v2.png">
+  <img width="400" src="asset/collect_pltfm_v2.png">
 </p>
 
 | **Sensor**    | **Details**                                                  |
