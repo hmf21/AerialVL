@@ -6,15 +6,15 @@
 ---
 <p align="center">
   <a href="#dataset">Dataset</a> •
-  <a href="#paper">Paper</a> •
-  <a href="#license">License</a> •
-  <a href="#submitting-statement">Statement</a>
+  <a href="#code">Code</a> •
+  <a href="#citation">Citation</a> •
+  <a href="#license">License</a>
 </p>
 
 </div>
 
 <p align="center">
-  <img width="600" height="338" src="asset/AerialVL_LT_small.png">
+  <img width="600" height="338" src="asset/AerialVL_LT_small.PNG">
 </p>
 
 ## Dataset
@@ -28,6 +28,8 @@
 <p align="center">
   <img width="600" height="338" src="asset/data_collect_syn.png">
 </p>
+
+## Code
 
 ## Citation
 The paper as well as the full dataset will be released after the review process completing.
