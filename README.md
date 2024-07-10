@@ -45,7 +45,7 @@
 | **Altimeter** | Benewake TF350; 10Hz update, 350m maximum detection range with 0.1m accuracy |
 
 ## Code
-Code for VPR is mainly inspired the evaulations given in [DVGL Benchmark](https://github.com/gmberton/deep-visual-geo-localization-benchmark).
+Code for VPR is mainly inspired by the evaulations given in [DVGL Benchmark](https://github.com/gmberton/deep-visual-geo-localization-benchmark).
 And we add some re-rank methods and re-implement it for the AerialVL dataset.
 The full code is coming soon.
 
