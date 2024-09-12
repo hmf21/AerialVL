@@ -1,57 +1,115 @@
-<div align="center">
-
 # AerialVL Dataset
 
-**AerialVL is a visual localization dataset designed for aerial-based Vehicles.**
----
-<p align="center">
-  <a href="#dataset">Dataset</a> •
-  <a href="#code">Code</a> •
-  <a href="#citation">Citation</a> •
-  <a href="#license">License</a>
-</p>
+This repo covers the supplementary materials of the following paper: 
 
-</div>
+[AerialVL: A Dataset, Baseline and Algorithm Framework for Aerial-Based Visual Localization With Reference Map](https://ieeexplore.ieee.org/abstract/document/10632587)
 
 <p align="center">
-  <img width="600" src="asset/AerialVL_LT_small.png">
+  <img width="600" src="asset/AerialVL.png">
 </p>
+
 
 ## Dataset
 
+### Download
+
+Two parts of the dataset can be downloaded from the [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/68c3a4ed24cc40f1a7da/), including the captured frames and satellite imageries for training.
+
 ### Description
 
-- About 70km flight data with various terrian, multi-height and illumination changes.
-- 11 flight sequences with different routes ranging from the shortest one of 3.7km to the longest up to 11km.
-- 18361 separate aerial-based images with 14096 cropped corresponding map patches.
-- Adequate evaluations on VPR, VAL and VO to serve as the baselines for aerial vehicles.
-- All samples include high-res images, IMU, and GNSS tag.
+- Flight data covering about 70 km trajectories with various terrains, multiple heights and illumination changes.
+- For sequence-based visual localization, 11 frame sequences with different paths ranging from the shortest one of 3.7 km to the longest up to 11 km.
+- For visual place recognition, 18361 separate aerial-based images with 14096 cropped corresponding map patches are provided.
 
 ### Sensor Setup
-<p align="center">
-  <img width="600" src="asset/data_collect_syn.PNG">
-</p>
+
+RGB camera (FLIR BFS-U3-31S4C-C) is attached with a gimbal to the UAV. The GNSS (NovAtel OEM718D) has 1.5 m accuracy in RMS with the single point mode.
 
 <p align="center">
   <img width="400" src="asset/collect_pltfm_v2.png">
 </p>
 
-| **Sensor**    | **Details**                                                  |
-| ------------- | ------------------------------------------------------------ |
-| **Camera**    | FLIR BFS-U3-31S4C-C; RGB channels, 2048×1536 resolution, 55Hz max frame rate (20Hz in experiment), global shutter |
-| **Lens**      | Chiopt FA0401C; 82.9 horizontal FOV, 66.5 vertical FOV, 4∼75mm focal length |
-| **IMU**       | Xsens MTi-30-2A8G4; 200Hz update with acceleration and angular velocity |
-| **GNSS**      | NovAtel OEM718D; dual-antenna, 5Hz update, 1.5m (RMS) with single point, 1cm + 1ppm (RMS) with RTK |
-| **Altimeter** | Benewake TF350; 10Hz update, 350m maximum detection range with 0.1m accuracy |
 
-## Code
-Code for VPR is mainly inspired by the evaulations given in [DVGL Benchmark](https://github.com/gmberton/deep-visual-geo-localization-benchmark).
-And we add some re-rank methods and re-implement it for the AerialVL dataset.
-The full code is coming soon.
+## Evaluation
+
+### VAL
+
+In the sequence-based visual localization part, we have prepared the evaluation data as follows.
+
+```
++--- geo_referenced_map
+|   +--- @large_map@120.42114259488751@36.604504047017464@120.48431398161503@36.573629616877625@.tif
+|   +--- @small_map@120.42114259488751@36.604504047017464@120.4568481612987@36.586863027841225@.tif
++--- long_trajtr
+|   +--- 2023-03-16-18-04-01
+|   +--- 2023-03-18-12-18-25
+|   +--- 2023-03-18-12-47-05
+|   +--- 2023-03-18-14-38-32
+|   +--- 2023-03-18-15-01-14
+|   +--- 2023-03-18-15-40-18
++--- short_trajtr
+|   +--- 2023-03-11-11-48-35
+|   +--- 2023-03-16-16-58-43
+|   +--- 2023-03-18-16-30-27
+|   +--- 2023-03-18-16-43-16
+|   +--- 2023-03-18-16-55-37
+
+```
+
+There are two geo-referenced map with different size for flight sequences with different length. They are also renamed as the the following formats (maps are heading north):
+
+```
+@map_name@LeftTopLongitude@LeftTopLatitude@RightBottomLongitude@RightBottomLatitude@.tif
+```
+
+And the captured frames are also re-organized as `@UTCTimeStamp@Longitude@Latitude@.png` (frames are heading east).
+
+### VPR
+
+The visual place recognition part are presented as follows:
+
+```
++--- map_database
+|   +--- level_1
+|   +--- level_2
+|   +--- level_3
++--- query_images
+|   +--- query_images_1
+|   +--- query_images_2
+|   +--- query_images_3
+|   +--- query_images_4
++--- raw_satellite_imagery
+|   +--- @map@120.42251588590332@36.60395282621937@120.48225404509132@36.573629616877625@.tif
+```
+
+The map tiles in the `map_database` folder are sampled from the satellite imagery, which is downloaded from the [Google Earth](https://earth.google.com/). The different levels in the `map_database` present the tiles with different size. These tiles are re-organized as follows (tiles are heading east to be consistent with the captured frame):
+
+```
+@map@LeftBottomLongitude@LeftBottomLatitude@RightTopLongitude@RightTopLatitude@.png
+```
+
+It is worth mentioning that the definition here is different from the VAL part because we adjust the heading of these tiles to make the VPR task more easier.
+
+The `query_image`folder contains the capture four parts of captured frames with names as  `@Longitude@Latitude@.png`.
+
+### Training Data
+
+We have also provided a lot of satellite imageries collected from different years using [USGS](https://earthexplorer.usgs.gov/). As the training data, these imageries can help you to get a new VPR model designed for the aerial-based platform.
 
 ## Citation
-The paper as well as the full dataset will be released after the review process completing.
 
-## License
-[GPLv3](http://www.gnu.org/licenses/) license.
+If you find this dataset useful for your research, please consider citing the paper
+
+```
+@article{he2024aerialvl,
+  author={He, Mengfan and Chen, Chao and Liu, Jiacheng and Li, Chunyu and Lyu, Xu and Huang, Guoquan and Meng, Ziyang},
+  journal={IEEE Robotics and Automation Letters}, 
+  title={AerialVL: A Dataset, Baseline and Algorithm Framework for Aerial-Based Visual Localization With Reference Map}, 
+  year={2024},
+  volume={9},
+  number={10},
+  pages={8210-8217},
+  publisher={IEEE}
+}
+```
 
