@@ -8,6 +8,8 @@ This repo covers the supplementary materials of the following paper:
   <img width="600" src="asset/AerialVL.png">
 </p>
 
+## Update !!!
+[2025/9/5] We have released the evaluated ros bags as well as the map resource of our new T-RO paper GeoVINS (the final version is ready for publication).  [Data Link](https://pan.baidu.com/s/1iJfCyyVSwmiKTZkcwNRCKQ?pwd=d7mc)  [Demo Link](https://www.bilibili.com/video/BV1UFa6z4Eks/?vd_source=dff151c0c5eee4ac7993c1d019aa0aff) 
 
 ## Dataset
 
