@@ -16,7 +16,7 @@ This repo covers the supplementary materials of the following paper:
 
 ### Download
 
-Two parts of the dataset can be downloaded from the [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/68c3a4ed24cc40f1a7da/) or [Baidu Netdisk](https://pan.baidu.com/share/init?surl=GsqOeb8Eo8bcMN1TYQv16Q&pwd=j0no), including the captured frames and satellite imageries for training.
+Two parts of the dataset can be downloaded from the [HuggingFace](https://huggingface.co/datasets/hmf21/AerialVL/tree/main), [Tsinghua Cloud](https://cloud.tsinghua.edu.cn/d/68c3a4ed24cc40f1a7da/) or [Baidu Netdisk](https://pan.baidu.com/share/init?surl=GsqOeb8Eo8bcMN1TYQv16Q&pwd=j0no), including the captured frames and satellite imageries for training.
 
 ### Description
 
