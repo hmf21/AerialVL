@@ -10,7 +10,8 @@ This repo covers the supplementary materials of the following paper:
 
 ## Updates
  - **[2025/09/24]** 🎉 Our T-RO paper is avaiable at [IEEE Paper Link](https://ieeexplore.ieee.org/document/11176431).
- - **[2025/09/05]** 🎉 We have released the evaluated ros bags as well as the map resource of our new T-RO paper GeoVINS (the final version is ready for publication).  [Data Link](https://pan.baidu.com/s/1iJfCyyVSwmiKTZkcwNRCKQ?pwd=d7mc)  [Demo Link](https://www.bilibili.com/video/BV1UFa6z4Eks/?vd_source=dff151c0c5eee4ac7993c1d019aa0aff) 
+ - **[2025/09/05]** 🎉 We have released the evaluated ros bags as well as the map resource of our new T-RO paper GeoVINS (the final version is ready for publication).  [Data Link](https://pan.baidu.com/s/1iJfCyyVSwmiKTZkcwNRCKQ?pwd=d7mc)  [Demo Link](https://www.bilibili.com/video/BV1UFa6z4Eks/?vd_source=dff151c0c5eee4ac7993c1d019aa0aff)
+ - **[2026/05/06]** 🎉 All the raw data in rosbag format of our T-RO paper are available in [Data Link](https://pan.baidu.com/s/17X69XFx9zrhgOwY52lLshw?pwd=r65j).
 
 ## Dataset
 
